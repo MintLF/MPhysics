@@ -9,31 +9,37 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 extension UTType {
-    static var exampleText: UTType {
-        UTType(importedAs: "com.example.plain-text")
-    }
+    static let mphysicsDocument = UTType(exportedAs: "com.example.mphysics")
 }
 
-struct MPhysicsDocument: FileDocument {
-    var text: String
+struct MPhysicsDocument: FileDocument, Codable {
+    var content: MPhysicsContent
 
-    init(text: String = "Hello, world!") {
-        self.text = text
+    init(text: String = "") {
+        self.content = MPhysicsContent(particles: [Particle(name: "质点1", position: Vector2D(x: 0, y: 0), displaycementMethod: .componentVelocities, velocities: [])])
+    }
+    
+    init(particles: [Particle]) {
+        self.content = MPhysicsContent(particles: particles)
     }
 
-    static var readableContentTypes: [UTType] { [.exampleText] }
+    static var readableContentTypes: [UTType] { [.mphysicsDocument] }
 
     init(configuration: ReadConfiguration) throws {
-        guard let data = configuration.file.regularFileContents,
-              let string = String(data: data, encoding: .utf8)
-        else {
-            throw CocoaError(.fileReadCorruptFile)
-        }
-        text = string
+        let data = configuration.file.regularFileContents!
+        self = try JSONDecoder().decode(Self.self, from: data)
     }
     
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
-        let data = text.data(using: .utf8)!
-        return .init(regularFileWithContents: data)
+        let data = try JSONEncoder().encode(self)
+        return FileWrapper(regularFileWithContents: data)
     }
 }
+
+let TESTING_DOCUMENT: MPhysicsDocument = MPhysicsDocument(particles: [Particle(
+        name: "Particle 1",
+        position: Vector2D(x: 0, y: 0),
+        displaycementMethod: .componentVelocities,
+        velocities: [Velocity(name: "速度1", changingMode: .constant, constant: Vector2D(x: 1, y: 1))]
+    )
+])

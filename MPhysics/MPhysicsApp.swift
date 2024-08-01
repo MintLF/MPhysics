@@ -13,5 +13,8 @@ struct MPhysicsApp: App {
         DocumentGroup(newDocument: MPhysicsDocument()) { file in
             ContentView(document: file.$document)
         }
+        Settings {
+            SettingsView()
+        }
     }
 }
